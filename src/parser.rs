@@ -37,7 +37,7 @@ macro_rules! get {
 }
 
 impl Parser {
-    fn new(tokens: VecDeque<Token>) -> Self {
+    pub fn new(tokens: VecDeque<Token>) -> Self {
         Self { index: 0, tokens }
     }
 
@@ -106,6 +106,14 @@ impl Parser {
             t
         } else {
             panic!();
+        }
+    }
+
+    pub fn parse(&mut self) -> AST {
+        match self.peek().unwrap() {
+            Token::Number(_) => self.expr(),
+            Token::Ident(_) => self.method_call(),
+            _ => unimplemented!()
         }
     }
 }
