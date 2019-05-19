@@ -75,61 +75,58 @@ impl<'a> Tokenizer<'a> {
     }
 }
 
-mod tests {
-    use super::*;
-    #[test]
-    fn new() {
-        let t = Tokenizer::new("hello");
-        assert_eq!(t.src, "hello");
-    }
+#[test]
+fn new() {
+    let t = Tokenizer::new("hello");
+    assert_eq!(t.src, "hello");
+}
 
-    #[test]
-    fn lex() {
-        let mut t = Tokenizer::new("hello");
-        assert_eq!(t.lex(), Some(Token::Ident("hello".to_string())));
+#[test]
+fn lex() {
+    let mut t = Tokenizer::new("hello");
+    assert_eq!(t.lex(), Some(Token::Ident("hello".to_string())));
 
-        let mut t = Tokenizer::new("Knium is godlike!");
-        assert_eq!(t.lex(), Some(Token::Ident("Knium".to_string())));
+    let mut t = Tokenizer::new("Knium is godlike!");
+    assert_eq!(t.lex(), Some(Token::Ident("Knium".to_string())));
 
-        let mut t = Tokenizer::new("42");
-        assert_eq!(t.lex(), Some(Token::Number(42)));
+    let mut t = Tokenizer::new("42");
+    assert_eq!(t.lex(), Some(Token::Number(42)));
 
-        let mut t = Tokenizer::new("+");
-        assert_eq!(t.lex(), Some(Token::Symbol('+')));
-    }
+    let mut t = Tokenizer::new("+");
+    assert_eq!(t.lex(), Some(Token::Symbol('+')));
+}
 
-    #[test]
-    fn lex_all() {
-        let mut t = Tokenizer::new("42+15");
-        assert_eq!(
-            t.lex_all(),
-            vec![Token::Number(42), Token::Symbol('+'), Token::Number(15),]
-        );
+#[test]
+fn lex_all() {
+    let mut t = Tokenizer::new("42+15");
+    assert_eq!(
+        t.lex_all(),
+        vec![Token::Number(42), Token::Symbol('+'), Token::Number(15),]
+    );
 
-        let input = "User.select();";
-        let mut t = Tokenizer::new(input);
-        assert_eq!(
-            t.lex_all(),
-            vec![
-                Token::Ident("User".to_string()),
-                Token::Symbol('.'),
-                Token::Ident("select".to_string()),
-                Token::Symbol('('),
-                Token::Symbol(')'),
-                Token::Symbol(';')
-            ]
-        );
+    let input = "User.select();";
+    let mut t = Tokenizer::new(input);
+    assert_eq!(
+        t.lex_all(),
+        vec![
+            Token::Ident("User".to_string()),
+            Token::Symbol('.'),
+            Token::Ident("select".to_string()),
+            Token::Symbol('('),
+            Token::Symbol(')'),
+            Token::Symbol(';')
+        ]
+    );
 
-        let mut t = Tokenizer::new("42      + 15 \n + 3");
-        assert_eq!(
-            t.lex_all(),
-            vec![
-                Token::Number(42),
-                Token::Symbol('+'),
-                Token::Number(15),
-                Token::Symbol('+'),
-                Token::Number(3)
-            ]
-        );
-    }
+    let mut t = Tokenizer::new("42      + 15 \n + 3");
+    assert_eq!(
+        t.lex_all(),
+        vec![
+            Token::Number(42),
+            Token::Symbol('+'),
+            Token::Number(15),
+            Token::Symbol('+'),
+            Token::Number(3)
+        ]
+    );
 }
