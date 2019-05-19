@@ -22,6 +22,9 @@ impl<'a> Tokenizer<'a> {
     pub fn lex(&mut self) -> Option<Token> {
         self.read_char();
         match self.ch {
+            // Skip blank chars.
+            Some(' ') | Some('\n') => self.lex(),
+
             // Ident or Keyword?
             Some('a'...'z') | Some('A'...'Z') => {
                 let mut buffer = String::new();
@@ -107,18 +110,6 @@ mod tests {
             vec![Token::Number(42), Token::Symbol('+'), Token::Number(15),]
         );
 
-        let mut t = Tokenizer::new("42      + 15 \n + 3");
-        assert_eq!(
-            t.lex_all(),
-            vec![
-                Token::Number(42),
-                Token::Symbol('+'),
-                Token::Number(15),
-                Token::Symbol('+'),
-                Token::Number(3)
-            ]
-        );
-
         let input = "User.select();";
         let mut t = Tokenizer::new(input);
         assert_eq!(
@@ -130,6 +121,18 @@ mod tests {
                 Token::Symbol('('),
                 Token::Symbol(')'),
                 Token::Symbol(';')
+            ]
+        );
+
+        let mut t = Tokenizer::new("42      + 15 \n + 3");
+        assert_eq!(
+            t.lex_all(),
+            vec![
+                Token::Number(42),
+                Token::Symbol('+'),
+                Token::Number(15),
+                Token::Symbol('+'),
+                Token::Number(3)
             ]
         );
     }
