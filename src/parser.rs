@@ -53,15 +53,31 @@ impl Parser {
         }
     }
 
-    fn add(&mut self) -> AST {
+    // TODO: def_parse_binop!(mul,'*', '/', term)
+    fn mul(&mut self) -> AST {
         let mut left = self.term();
+        loop {
+            let peeked = self.peek();
+            if peeked != Some(&Token::Symbol('*')) && peeked != Some(&Token::Symbol('/')) {
+                break;
+            }
+            let op = get!(self, Symbol);
+            let right = self.term();
+            left = binop!(left, op, right);
+        }
+        left
+    }
+
+    // TODO: def_parse_binop!(add,'*', '/', mul)
+    fn add(&mut self) -> AST {
+        let mut left = self.mul();
         loop {
             let peeked = self.peek();
             if peeked != Some(&Token::Symbol('+')) && peeked != Some(&Token::Symbol('-')) {
                 break;
             }
             let op = get!(self, Symbol);
-            let right = self.term();
+            let right = self.mul();
             left = binop!(left, op, right);
         }
         left
@@ -113,7 +129,7 @@ impl Parser {
         match self.peek().unwrap() {
             Token::Number(_) => self.expr(),
             Token::Ident(_) => self.method_call(),
-            _ => unimplemented!()
+            _ => unimplemented!(),
         }
     }
 }
@@ -131,6 +147,15 @@ fn add() {
     assert_eq!(
         Parser::new(tokens).add(),
         binop!(binop!(Number(1), '+', Number(2)), '+', Number(3))
+    );
+}
+
+#[test]
+fn mul() {
+    let tokens = Tokenizer::new("1 + 2 * 3").lex_all();
+    assert_eq!(
+        Parser::new(tokens).add(),
+        binop!(Number(1), '+', binop!(Number(2), '*', Number(3)))
     );
 }
 
