@@ -3,9 +3,7 @@ use crate::token::Token;
 pub struct Tokenizer<'a> {
     src: &'a str,
     index: usize,
-    peeked: usize,
     ch: Option<char>,
-    result: Vec<Token>,
 }
 
 impl<'a> Tokenizer<'a> {
@@ -13,9 +11,7 @@ impl<'a> Tokenizer<'a> {
         Self {
             src,
             index: 0,
-            peeked: 0,
             ch: None,
-            result: vec![],
         }
     }
 
