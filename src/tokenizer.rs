@@ -46,8 +46,8 @@ impl<'a> Tokenizer<'a> {
 
             // Only Symbol?
             Some(ch) => match ch {
-                '+' | '-' | '*' | '/' | '(' | ')' | '.' | ';' => Some(Token::Symbol(ch)),
-                _ => unimplemented!(),
+                '+' | '-' | '*' | '/' | '(' | ')' | '.' | ';' | ',' => Some(Token::Symbol(ch)),
+                _ => panic!("unexpected char! {:?}", ch),
             },
             _ => None,
         }
