@@ -19,35 +19,46 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    pub fn lex(&mut self) -> Token {
-        match self.peek() {
+    pub fn lex(&mut self) -> Option<Token> {
+        self.read_char();
+        match self.ch {
             // Ident or Keyword?
             Some('a'...'z') | Some('A'...'Z') => {
                 let mut buffer = String::new();
-                while let Some('a'...'z') | Some('A'...'Z') = self.peek() {
-                    buffer.push(self.peek().unwrap());
+                while let Some('a'...'z') | Some('A'...'Z') = self.ch {
+                    buffer.push(self.ch.unwrap());
                     self.read_char();
                 }
-                Token::Ident(buffer)
+                self.backtrack();
+                Some(Token::Ident(buffer))
             }
 
             // Number
             Some('0'...'9') => {
                 let mut buffer = String::new();
-                while let Some('0'...'9') = self.peek() {
-                    buffer.push(self.peek().unwrap());
+                while let Some('0'...'9') = self.ch {
+                    buffer.push(self.ch.unwrap());
                     self.read_char();
                 }
-                Token::Number(buffer.parse().unwrap())
+                self.backtrack();
+                Some(Token::Number(buffer.parse().unwrap()))
             }
 
             // Only Symbol?
             Some(ch) => match ch {
-                '+' | '-' | '*' | '/' | '(' | ')' | '.' | ';' => Token::Symbol(ch),
+                '+' | '-' | '*' | '/' | '(' | ')' | '.' | ';' => Some(Token::Symbol(ch)),
                 _ => unimplemented!(),
             },
-            _ => unimplemented!(),
+            _ => None,
         }
+    }
+
+    pub fn lex_all(&mut self) -> Vec<Token> {
+        let mut result = vec![];
+        while let Some(token) = self.lex() {
+            result.push(token);
+        }
+        result
     }
 
     fn peek(&self) -> Option<char> {
@@ -57,6 +68,11 @@ impl<'a> Tokenizer<'a> {
     fn read_char(&mut self) {
         self.ch = self.src.chars().nth(self.index);
         self.index += 1;
+    }
+
+    fn backtrack(&mut self) {
+        self.index -= 1;
+        self.ch = self.src.chars().nth(self.index);
     }
 }
 
@@ -71,15 +87,50 @@ mod tests {
     #[test]
     fn lex() {
         let mut t = Tokenizer::new("hello");
-        assert_eq!(t.lex(), Token::Ident("hello".to_string()));
+        assert_eq!(t.lex(), Some(Token::Ident("hello".to_string())));
 
         let mut t = Tokenizer::new("Knium is godlike!");
-        assert_eq!(t.lex(), Token::Ident("Knium".to_string()));
+        assert_eq!(t.lex(), Some(Token::Ident("Knium".to_string())));
 
         let mut t = Tokenizer::new("42");
-        assert_eq!(t.lex(), Token::Number(42));
+        assert_eq!(t.lex(), Some(Token::Number(42)));
 
         let mut t = Tokenizer::new("+");
-        assert_eq!(t.lex(), Token::Symbol('+'));
+        assert_eq!(t.lex(), Some(Token::Symbol('+')));
+    }
+
+    #[test]
+    fn lex_all() {
+        let mut t = Tokenizer::new("42+15");
+        assert_eq!(
+            t.lex_all(),
+            vec![Token::Number(42), Token::Symbol('+'), Token::Number(15),]
+        );
+
+        let mut t = Tokenizer::new("42      + 15 \n + 3");
+        assert_eq!(
+            t.lex_all(),
+            vec![
+                Token::Number(42),
+                Token::Symbol('+'),
+                Token::Number(15),
+                Token::Symbol('+'),
+                Token::Number(3)
+            ]
+        );
+
+        let input = "User.select();";
+        let mut t = Tokenizer::new(input);
+        assert_eq!(
+            t.lex_all(),
+            vec![
+                Token::Ident("User".to_string()),
+                Token::Symbol('.'),
+                Token::Ident("select".to_string()),
+                Token::Symbol('('),
+                Token::Symbol(')'),
+                Token::Symbol(';')
+            ]
+        );
     }
 }
