@@ -1,4 +1,5 @@
 use crate::token::Token;
+use std::collections::VecDeque;
 
 pub struct Tokenizer<'a> {
     src: &'a str,
@@ -52,10 +53,10 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    pub fn lex_all(&mut self) -> Vec<Token> {
-        let mut result = vec![];
+    pub fn lex_all(&mut self) -> VecDeque<Token> {
+        let mut result = VecDeque::new();
         while let Some(token) = self.lex() {
-            result.push(token);
+            result.push_back(token);
         }
         result
     }
