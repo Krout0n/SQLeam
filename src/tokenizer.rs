@@ -29,6 +29,14 @@ impl<'a> Tokenizer<'a> {
                 }
                 Token::Ident(buffer)
             }
+            Some('0'...'9') => {
+                let mut buffer = String::new();
+                while let Some('0' ... '9') = self.peek() {
+                    buffer.push(self.peek().unwrap());
+                    self.read_char();
+                }
+                Token::Number(buffer.parse().unwrap())
+            }
             _ => unimplemented!(),
         }
     }
@@ -59,5 +67,8 @@ mod tests {
 
         let mut t = Tokenizer::new("Knium is godlike!");
         assert_eq!(t.lex(), Token::Ident("Knium".to_string()));
+
+        let mut t = Tokenizer::new("42");
+        assert_eq!(t.lex(), Token::Number(42));
     }
 }
