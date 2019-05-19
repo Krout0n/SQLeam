@@ -21,26 +21,34 @@ impl<'a> Tokenizer<'a> {
 
     pub fn lex(&mut self) -> Token {
         match self.peek() {
-            Some('a'...'z') | Some('A' ... 'Z') => {
+            // Ident or Keyword?
+            Some('a'...'z') | Some('A'...'Z') => {
                 let mut buffer = String::new();
-                while let Some('a' ... 'z') | Some('A' ... 'Z') = self.peek() {
+                while let Some('a'...'z') | Some('A'...'Z') = self.peek() {
                     buffer.push(self.peek().unwrap());
                     self.read_char();
                 }
                 Token::Ident(buffer)
             }
+
+            // Number
             Some('0'...'9') => {
                 let mut buffer = String::new();
-                while let Some('0' ... '9') = self.peek() {
+                while let Some('0'...'9') = self.peek() {
                     buffer.push(self.peek().unwrap());
                     self.read_char();
                 }
                 Token::Number(buffer.parse().unwrap())
             }
+
+            // Only Symbol?
+            Some(ch) => match ch {
+                '+' | '-' | '*' | '/' | '(' | ')' | '.' | ';' => Token::Symbol(ch),
+                _ => unimplemented!(),
+            },
             _ => unimplemented!(),
         }
     }
-
 
     fn peek(&self) -> Option<char> {
         self.src.chars().nth(self.index)
@@ -70,5 +78,8 @@ mod tests {
 
         let mut t = Tokenizer::new("42");
         assert_eq!(t.lex(), Token::Number(42));
+
+        let mut t = Tokenizer::new("+");
+        assert_eq!(t.lex(), Token::Symbol('+'));
     }
 }
