@@ -1,4 +1,7 @@
+use self::AST::*;
+use statikk_db::ast::AST;
 use statikk_db::parser::Parser;
+use statikk_db::table::Table;
 use statikk_db::tokenizer::Tokenizer;
 
 fn read() -> String {
@@ -8,9 +11,17 @@ fn read() -> String {
 }
 
 fn main() {
+    let mut t = Table::new();
     loop {
         let s = read();
         let tokens = Tokenizer::new(s.trim()).lex_all();
-        dbg!(Parser::new(tokens).parse());
+        let tree = Parser::new(tokens).parse();
+        match tree {
+            MethodCall { table, name, args } => t.command(&name),
+            _ => {
+                dbg!(tree);
+                ()
+            }
+        };
     }
 }
