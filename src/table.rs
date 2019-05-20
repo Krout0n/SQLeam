@@ -1,3 +1,5 @@
+use crate::ast::AST;
+
 #[derive(Debug)]
 pub struct Table {
     col: Vec<User>,
@@ -22,17 +24,17 @@ impl Table {
         }
     }
 
-    pub fn command(&mut self, name: &str) {
-        match name {
-            "select" => {
-                dbg!(&self);
-                ()
-            }
-            "insert" => {
-                self.col.push(User::new(self.col.len() + 1, "inserted"));
-                dbg!(&self);
-            }
-            _ => unimplemented!(),
-        };
+    pub fn command(&mut self, tree: AST) {
+        if let AST::MethodCall { table, name, args } = tree {
+            match &*name {
+                "select" => (),
+                "insert" => self.col.push(User::new(self.col.len() + 1, "inserted")),
+                "delete" => {
+                    self.col.pop();
+                }
+                _ => unimplemented!(),
+            };
+            dbg!(&self);
+        }
     }
 }

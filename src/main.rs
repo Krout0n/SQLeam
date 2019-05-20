@@ -17,7 +17,7 @@ fn main() {
         let tokens = Tokenizer::new(s.trim()).lex_all();
         let tree = Parser::new(tokens).parse();
         match tree {
-            MethodCall { table, name, args } => t.command(&name),
+            MethodCall { table: _, name: _, args: _ } => t.command(tree),
             _ => {
                 dbg!(tree);
                 ()
