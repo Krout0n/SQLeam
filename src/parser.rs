@@ -1,6 +1,7 @@
 use self::AST::*;
-use crate::ast::AST;
-use crate::token::Token;
+use crate::ast::{Member, AST};
+use crate::primitive::Type;
+use crate::token::{KeywordKind, Token};
 use crate::tokenizer::Tokenizer;
 use std::collections::VecDeque;
 
@@ -125,10 +126,29 @@ impl Parser {
         }
     }
 
+    fn table_def(&mut self) -> AST {
+        self.get();
+        let name = get!(self, Ident);
+        let mut members = vec![];
+        expect!(self, Symbol, '{');
+        if let Some(Token::Keyword(KeywordKind::Int)) = self.peek() {
+            self.get();
+            expect!(self, Symbol, ':');
+            let field = get!(self, Ident);
+            members.push(Member {
+                typ: Type::Int,
+                field,
+            })
+        }
+        expect!(self, Symbol, '}');
+        AST::TableDef { name, members }
+    }
+
     pub fn parse(&mut self) -> AST {
         match self.peek().unwrap() {
             Token::Number(_) => self.expr(),
             Token::Ident(_) => self.method_call(),
+            Token::Keyword(KeywordKind::Table) => self.table_def(),
             _ => unimplemented!(),
         }
     }
@@ -188,6 +208,30 @@ fn method_call() {
             table: "User".to_string(),
             name: "select".to_string(),
             args: vec![binop!(Number(1), '+', Number(1)), Number(2)]
+        }
+    );
+}
+
+#[test]
+fn table_def() {
+    let tokens = Tokenizer::new("Table NewUser {}").lex_all();
+    assert_eq!(
+        Parser::new(tokens).table_def(),
+        AST::TableDef {
+            name: "NewUser".to_string(),
+            members: vec![]
+        }
+    );
+
+    let tokens = Tokenizer::new("Table NewUser {int: id}").lex_all();
+    assert_eq!(
+        Parser::new(tokens).table_def(),
+        AST::TableDef {
+            name: "NewUser".to_string(),
+            members: vec![Member {
+                typ: Type::Int,
+                field: "id".to_string(),
+            }]
         }
     );
 }

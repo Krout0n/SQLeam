@@ -1,4 +1,4 @@
-use crate::token::Token;
+use crate::token::{KeywordKind, Token};
 use std::collections::VecDeque;
 
 pub struct Tokenizer<'a> {
@@ -30,7 +30,7 @@ impl<'a> Tokenizer<'a> {
                     self.read_char();
                 }
                 self.backtrack();
-                Some(Token::Ident(buffer))
+                Some(Token::lookup(buffer))
             }
 
             // Number
@@ -46,7 +46,9 @@ impl<'a> Tokenizer<'a> {
 
             // Only Symbol?
             Some(ch) => match ch {
-                '+' | '-' | '*' | '/' | '(' | ')' | '.' | ';' | ',' => Some(Token::Symbol(ch)),
+                '+' | '-' | '*' | '/' | '(' | ')' | '.' | ';' | ',' | '{' | '}' | ':' => {
+                    Some(Token::Symbol(ch))
+                }
                 _ => panic!("unexpected char! {:?}", ch),
             },
             _ => None,
@@ -95,6 +97,12 @@ fn lex() {
 
     let mut t = Tokenizer::new("+");
     assert_eq!(t.lex(), Some(Token::Symbol('+')));
+
+    let mut t = Tokenizer::new("Table");
+    assert_eq!(t.lex(), Some(Token::Keyword(KeywordKind::Table)));
+
+    let mut t = Tokenizer::new("int");
+    assert_eq!(t.lex(), Some(Token::Keyword(KeywordKind::Int)));
 }
 
 #[test]

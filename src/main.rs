@@ -1,7 +1,7 @@
 use self::AST::*;
 use statikk_db::ast::AST;
+use statikk_db::database::Database;
 use statikk_db::parser::Parser;
-use statikk_db::table::Table;
 use statikk_db::tokenizer::Tokenizer;
 use std::io::{self, Write};
 
@@ -12,27 +12,23 @@ fn read() -> String {
 }
 
 fn main() {
-    let mut t = Table::new();
+    let mut db = Database::new();
     loop {
         print!(">> ");
         io::stdout().flush().unwrap();
 
         let s = read();
-        if &s == "exit\n" {
-            break;
-        }
+        match &*s {
+            "exit\n" => break,
+            "show db;\n" => {
+                dbg!(&db);
+                continue;
+            }
+            _ => (),
+        };
         let tokens = Tokenizer::new(s.trim()).lex_all();
         let tree = Parser::new(tokens).parse();
-        match tree {
-            MethodCall {
-                table: _,
-                name: _,
-                args: _,
-            } => t.command(tree),
-            _ => {
-                dbg!(tree);
-                ()
-            }
-        };
+        db.execute(tree);
+        dbg!(&db);
     }
 }
