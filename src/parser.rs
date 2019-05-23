@@ -46,6 +46,7 @@ impl Parser {
         let t = self.get();
         match t {
             Token::Number(n) => Number(n),
+            Token::StrLiteral(s) => StrLiteral(s),
             _ => {
                 dbg!(t);
                 dbg!(&self.tokens);
@@ -129,17 +130,30 @@ impl Parser {
     fn table_def(&mut self) -> AST {
         self.get();
         let name = get!(self, Ident);
-        let mut members = vec![];
         expect!(self, Symbol, '{');
-        if let Some(Token::Keyword(KeywordKind::Int)) = self.peek() {
-            self.get();
-            expect!(self, Symbol, ':');
-            let field = get!(self, Ident);
-            members.push(Member {
-                typ: Type::Int,
-                field,
-            })
-        }
+        let members = if let Some(&Token::Symbol('}')) = self.peek() {
+            vec![]
+        } else {
+            let mut v = vec![];
+            loop {
+                match self.peek() {
+                    Some(Token::Keyword(KeywordKind::Int))
+                    | Some(Token::Keyword(KeywordKind::Chars)) => {
+                        let typ = Type::from_token(self.get());
+                        expect!(self, Symbol, ':');
+                        let field = get!(self, Ident);
+                        v.push(Member { typ, field })
+                    }
+                    Some(Token::Symbol(',')) => {
+                        self.get();
+                        continue;
+                    }
+                    Some(Token::Symbol('}')) => break,
+                    _ => unreachable!(),
+                }
+            }
+            v
+        };
         expect!(self, Symbol, '}');
         AST::TableDef { name, members }
     }
@@ -159,6 +173,13 @@ impl Parser {
 fn new() {
     let tokens = Tokenizer::new("hogefuga").lex_all();
     assert_eq!(Parser::new(tokens).index, 0);
+}
+
+#[test]
+fn term() {
+    let s = "\"kuru\"";
+    let tokens = Tokenizer::new(&s).lex_all();
+    assert_eq!(Parser::new(tokens).term(), StrLiteral("kuru".to_string()));
 }
 
 #[test]
@@ -232,6 +253,42 @@ fn table_def() {
                 typ: Type::Int,
                 field: "id".to_string(),
             }]
+        }
+    );
+
+    let tokens = Tokenizer::new("Table NewUser {int: id, string: name,}").lex_all();
+    assert_eq!(
+        Parser::new(tokens).table_def(),
+        AST::TableDef {
+            name: "NewUser".to_string(),
+            members: vec![
+                Member {
+                    typ: Type::Int,
+                    field: "id".to_string(),
+                },
+                Member {
+                    typ: Type::Chars,
+                    field: "name".to_string(),
+                }
+            ]
+        }
+    );
+
+    let tokens = Tokenizer::new("Table NewUser {int: id, string: name}").lex_all();
+    assert_eq!(
+        Parser::new(tokens).table_def(),
+        AST::TableDef {
+            name: "NewUser".to_string(),
+            members: vec![
+                Member {
+                    typ: Type::Int,
+                    field: "id".to_string(),
+                },
+                Member {
+                    typ: Type::Chars,
+                    field: "name".to_string(),
+                }
+            ]
         }
     );
 }

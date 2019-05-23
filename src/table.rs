@@ -13,12 +13,14 @@ pub struct Table {
 #[derive(Debug, PartialEq)]
 enum Value {
     Int(i32),
+    StrLiteral(String),
 }
 
 impl Value {
     fn from_ast(tree: AST) -> Self {
         match tree {
             AST::Number(i) => Value::Int(i),
+            AST::StrLiteral(s) => Value::StrLiteral(s),
             _ => unimplemented!(),
         }
     }
@@ -62,4 +64,10 @@ fn new() {
 fn eval_args() {
     let args = vec![AST::Number(1), AST::Number(2)];
     assert_eq!(Table::eval_args(args), vec![Value::Int(1), Value::Int(2)]);
+
+    let args = vec![AST::Number(1), AST::StrLiteral("kuru".to_string())];
+    assert_eq!(
+        Table::eval_args(args),
+        vec![Value::Int(1), Value::StrLiteral("kuru".to_string())]
+    );
 }

@@ -44,6 +44,16 @@ impl<'a> Tokenizer<'a> {
                 Some(Token::Number(buffer.parse().unwrap()))
             }
 
+            Some('"') => {
+                self.read_char();
+                let mut buffer = String::new();
+                while self.ch != Some('"') {
+                    buffer.push(self.ch.unwrap());
+                    self.read_char();
+                }
+                Some(Token::StrLiteral(buffer))
+            }
+
             // Only Symbol?
             Some(ch) => match ch {
                 '+' | '-' | '*' | '/' | '(' | ')' | '.' | ';' | ',' | '{' | '}' | ':' => {
@@ -103,6 +113,9 @@ fn lex() {
 
     let mut t = Tokenizer::new("int");
     assert_eq!(t.lex(), Some(Token::Keyword(KeywordKind::Int)));
+
+    let mut t = Tokenizer::new("\"How are you?\"");
+    assert_eq!(t.lex(), Some(Token::StrLiteral("How are you?".to_string())));
 }
 
 #[test]

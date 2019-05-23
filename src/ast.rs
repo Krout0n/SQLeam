@@ -3,6 +3,7 @@ use crate::primitive::Type;
 #[derive(Debug, PartialEq)]
 pub enum AST {
     Number(i32),
+    StrLiteral(String),
     BinOP(Box<AST>, char, Box<AST>),
     MethodCall {
         table: String,

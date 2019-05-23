@@ -3,6 +3,7 @@ pub enum Token {
     Number(i32),
     Ident(String),
     Symbol(char),
+    StrLiteral(String),
     Keyword(KeywordKind),
 }
 
@@ -10,6 +11,7 @@ pub enum Token {
 pub enum KeywordKind {
     Table,
     Int,
+    Chars,
 }
 
 use KeywordKind::*;
@@ -20,6 +22,7 @@ impl Token {
         match &*literal {
             "Table" => Keyword(Table),
             "int" => Keyword(Int),
+            "string" => Keyword(Chars),
             _ => Ident(literal),
         }
     }
