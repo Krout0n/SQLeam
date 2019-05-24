@@ -30,6 +30,12 @@ impl Value {
     }
 }
 
+macro_rules! type_value {
+    ($variant: ident) => {
+        (Type::$variant, Value::$variant(_))
+    };
+}
+
 impl Table {
     pub fn new(name: Identifier, members: Vec<Member>) -> Self {
         Self {
@@ -54,7 +60,7 @@ impl Table {
         for (index, arg) in args.iter().enumerate() {
             let typ = &self.members.get(index).unwrap().typ;
             match (typ, arg) {
-                (Type::Int, Value::Int(_)) | (Type::Chars, Value::StrLiteral(_)) => (),
+                type_value!(Int) | type_value!(StrLiteral) => (),
                 _ => return Err("Unmatched type of arg."),
             };
         }

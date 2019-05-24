@@ -11,7 +11,7 @@ pub enum Token {
 pub enum KeywordKind {
     Table,
     Int,
-    Chars,
+    StrLiteral,
 }
 
 use KeywordKind::*;
@@ -22,7 +22,7 @@ impl Token {
         match &*literal {
             "Table" => Keyword(Table),
             "int" => Keyword(Int),
-            "string" => Keyword(Chars),
+            "string" => Keyword(KeywordKind::StrLiteral),
             _ => Ident(literal),
         }
     }

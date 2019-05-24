@@ -134,11 +134,12 @@ impl Parser {
         let members = if let Some(&Token::Symbol('}')) = self.peek() {
             vec![]
         } else {
+            // TODO: Consider <ident> : <type> or <type> : <ident>
             let mut v = vec![];
             loop {
                 match self.peek() {
                     Some(Token::Keyword(KeywordKind::Int))
-                    | Some(Token::Keyword(KeywordKind::Chars)) => {
+                    | Some(Token::Keyword(KeywordKind::StrLiteral)) => {
                         let typ = Type::from_token(self.get());
                         expect!(self, Symbol, ':');
                         let field = get!(self, Ident);
@@ -267,7 +268,7 @@ fn table_def() {
                     field: "id".to_string(),
                 },
                 Member {
-                    typ: Type::Chars,
+                    typ: Type::StrLiteral,
                     field: "name".to_string(),
                 }
             ]
@@ -285,7 +286,7 @@ fn table_def() {
                     field: "id".to_string(),
                 },
                 Member {
-                    typ: Type::Chars,
+                    typ: Type::StrLiteral,
                     field: "name".to_string(),
                 }
             ]
