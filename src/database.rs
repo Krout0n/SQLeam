@@ -15,18 +15,21 @@ impl Database {
         }
     }
 
-    pub fn execute(&mut self, tree: AST) {
+    pub fn execute(&mut self, tree: AST) -> Result<(), &'static str> {
         match tree {
             AST::TableDef { name, members } => {
                 self.table.insert(name.clone(), Table::new(name, members));
+                Ok(())
             }
             AST::MethodCall { table, name, args } => {
                 if let Some(table) = self.table.get_mut(&table) {
-                    table.execute(name, args);
+                    table.execute(name, args)
+                } else {
+                    Err("Table not found!!")
                 }
             }
-            _ => (),
-        };
+            _ => Err("Unimplemented AST!!"),
+        }
     }
 }
 
@@ -34,4 +37,26 @@ impl Database {
 fn new() {
     let db = Database::new();
     assert_eq!(db.table.len(), 0);
+}
+
+#[test]
+fn execute() {
+    let mut db = Database::new();
+    // Create new table
+    assert_eq!(
+        db.execute(AST::TableDef {
+            name: "Hoge".to_string(),
+            members: vec![]
+        }),
+        Ok(())
+    );
+
+    assert_eq!(
+        db.execute(AST::MethodCall {
+            table: "Fuga".to_string(),
+            name: "insert".to_string(),
+            args: vec![]
+        }),
+        Err("Table not found!!")
+    );
 }

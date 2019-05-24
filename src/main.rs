@@ -28,7 +28,10 @@ fn main() {
         };
         let tokens = Tokenizer::new(s.trim()).lex_all();
         let tree = Parser::new(tokens).parse();
-        db.execute(tree);
-        dbg!(&db);
+        if let Err(msg) = db.execute(tree) {
+            println!("{}", msg);
+        } else {
+            dbg!(&db);
+        }
     }
 }

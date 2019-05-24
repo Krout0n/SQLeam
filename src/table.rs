@@ -1,7 +1,11 @@
 use crate::ast::{Member, AST};
+use crate::primitive::Type;
 
 type Identifier = String;
 type Values = Vec<Value>;
+
+// TODO: Rename better and Retype.
+type R = Result<(), &'static str>;
 
 #[derive(Debug)]
 pub struct Table {
@@ -43,11 +47,35 @@ impl Table {
         column
     }
 
-    pub fn execute(&mut self, name: Identifier, args: Vec<AST>) {
+    fn type_check(&self, args: &Values) -> R {
+        if args.len() != self.members.len() {
+            return Err("Wrong number of arguments.");
+        }
+        for (index, arg) in args.iter().enumerate() {
+            let typ = &self.members.get(index).unwrap().typ;
+            match (typ, arg) {
+                (Type::Int, Value::Int(_)) | (Type::Chars, Value::StrLiteral(_)) => (),
+                _ => return Err("Unmatched type of arg."),
+            };
+        }
+        Ok(())
+    }
+
+    pub fn execute(&mut self, name: Identifier, args: Vec<AST>) -> R {
         match &*name {
             "insert" => {
                 let args = Self::eval_args(args);
+                self.type_check(&args)?;
                 self.column.push(args);
+                Ok(())
+            }
+            "delete" => {
+                if let Some(arg) = Self::eval_args(args).get(0) {
+                    if let Value::Int(index) = arg {
+                        self.column.remove(*index as usize + 1);
+                    }
+                }
+                Ok(())
             }
             _ => unimplemented!(),
         }
@@ -69,5 +97,25 @@ fn eval_args() {
     assert_eq!(
         Table::eval_args(args),
         vec![Value::Int(1), Value::StrLiteral("kuru".to_string())]
+    );
+}
+
+#[test]
+fn type_check() {
+    let table = Table::new(
+        "NewUser".to_string(),
+        vec![Member {
+            field: "id".to_string(),
+            typ: Type::Int,
+        }],
+    );
+
+    assert_eq!(table.type_check(&vec![]), Err("Wrong number of arguments."));
+
+    assert_eq!(table.type_check(&vec![Value::Int(10)]), Ok(()));
+
+    assert_eq!(
+        table.type_check(&vec![Value::StrLiteral("hoge".to_string())]),
+        Err("Unmatched type of arg.")
     );
 }
