@@ -134,16 +134,14 @@ impl Parser {
         let members = if let Some(&Token::Symbol('}')) = self.peek() {
             vec![]
         } else {
-            // TODO: Consider <ident> : <type> or <type> : <ident>
             let mut v = vec![];
             loop {
                 match self.peek() {
-                    Some(Token::Keyword(KeywordKind::Int))
-                    | Some(Token::Keyword(KeywordKind::StrLiteral)) => {
-                        let typ = Type::from_token(self.get());
-                        expect!(self, Symbol, ':');
+                    Some(Token::Ident(_)) => {
                         let field = get!(self, Ident);
-                        v.push(Member { typ, field })
+                        expect!(self, Symbol, ':');
+                        let typ = Type::from_token(self.get());
+                        v.push(Member { typ, field });
                     }
                     Some(Token::Symbol(',')) => {
                         self.get();
@@ -245,7 +243,7 @@ fn table_def() {
         }
     );
 
-    let tokens = Tokenizer::new("Table NewUser {int: id}").lex_all();
+    let tokens = Tokenizer::new("Table NewUser {id: int}").lex_all();
     assert_eq!(
         Parser::new(tokens).table_def(),
         AST::TableDef {
@@ -257,7 +255,7 @@ fn table_def() {
         }
     );
 
-    let tokens = Tokenizer::new("Table NewUser {int: id, string: name,}").lex_all();
+    let tokens = Tokenizer::new("Table NewUser {id: int, name: string,}").lex_all();
     assert_eq!(
         Parser::new(tokens).table_def(),
         AST::TableDef {
@@ -275,7 +273,7 @@ fn table_def() {
         }
     );
 
-    let tokens = Tokenizer::new("Table NewUser {int: id, string: name}").lex_all();
+    let tokens = Tokenizer::new("Table NewUser {id: int, name: string}").lex_all();
     assert_eq!(
         Parser::new(tokens).table_def(),
         AST::TableDef {
