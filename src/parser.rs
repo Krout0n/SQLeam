@@ -1,5 +1,5 @@
 use self::AST::*;
-use crate::ast::{Member, AST};
+use crate::ast::{Member, AST, OP};
 use crate::primitive::Type;
 use crate::token::{KeywordKind, Token};
 use std::collections::VecDeque;
@@ -7,12 +7,6 @@ use std::collections::VecDeque;
 pub struct Parser {
     index: usize,
     tokens: VecDeque<Token>,
-}
-
-macro_rules! binop {
-    ($left: expr, $op: expr, $right: expr) => {
-        BinOP(Box::new($left), $op, Box::new($right))
-    };
 }
 
 macro_rules! expect {
@@ -54,38 +48,52 @@ impl Parser {
         }
     }
 
-    // TODO: def_parse_binop!(mul,'*', '/', term)
+    // TODO: def_parse_AST::binop(mul,'*', '/', term)
     fn mul(&mut self) -> AST {
         let mut left = self.term();
         loop {
             let peeked = self.peek();
-            if peeked != Some(&Token::Symbol('*')) && peeked != Some(&Token::Symbol('/')) {
+            if peeked != Some(&Token::Mul) {
                 break;
             }
-            let op = get!(self, Symbol);
+            let op = self.get();
             let right = self.term();
-            left = binop!(left, op, right);
+            left = AST::binop(left, OP::from_token(op), right);
         }
         left
     }
 
-    // TODO: def_parse_binop!(add,'*', '/', mul)
+    // TODO: def_parse_AST::binop(add,'*', '/', mul)
     fn add(&mut self) -> AST {
         let mut left = self.mul();
         loop {
             let peeked = self.peek();
-            if peeked != Some(&Token::Symbol('+')) && peeked != Some(&Token::Symbol('-')) {
+            if peeked != Some(&Token::Add) && peeked != Some(&Token::Minus) {
                 break;
             }
-            let op = get!(self, Symbol);
+            let op = self.get();
             let right = self.mul();
-            left = binop!(left, op, right);
+            left = AST::binop(left, OP::from_token(op), right);
+        }
+        left
+    }
+
+    fn equal(&mut self) -> AST {
+        let mut left = self.add();
+        loop {
+            if self.peek() != Some(&Token::EqEq) {
+                break;
+            }
+            // TODO: Fix hard coding.
+            self.get();
+            let right = self.add();
+            left = AST::binop(left, OP::EqEq, right);
         }
         left
     }
 
     fn expr(&mut self) -> AST {
-        self.add()
+        self.equal()
     }
 
     fn method_call(&mut self) -> AST {
@@ -187,7 +195,11 @@ fn add() {
     let tokens = Tokenizer::new("1 + 2 + 3").lex_all();
     assert_eq!(
         Parser::new(tokens).add(),
-        binop!(binop!(Number(1), '+', Number(2)), '+', Number(3))
+        AST::binop(
+            AST::binop(Number(1), OP::Add, Number(2)),
+            OP::Add,
+            Number(3)
+        )
     );
 }
 
@@ -196,7 +208,24 @@ fn mul() {
     let tokens = Tokenizer::new("1 + 2 * 3").lex_all();
     assert_eq!(
         Parser::new(tokens).add(),
-        binop!(Number(1), '+', binop!(Number(2), '*', Number(3)))
+        AST::binop(
+            Number(1),
+            OP::Add,
+            AST::binop(Number(2), OP::Mul, Number(3))
+        )
+    );
+}
+
+#[test]
+fn equal() {
+    let tokens = Tokenizer::new("4 == 2 + 3").lex_all();
+    assert_eq!(
+        Parser::new(tokens).equal(),
+        AST::binop(
+            Number(4),
+            OP::EqEq,
+            AST::binop(Number(2), OP::Add, Number(3))
+        )
     );
 }
 
@@ -228,7 +257,7 @@ fn method_call() {
         AST::MethodCall {
             table: "User".to_string(),
             name: "select".to_string(),
-            args: vec![binop!(Number(1), '+', Number(1)), Number(2)]
+            args: vec![AST::binop(Number(1), OP::Add, Number(1)), Number(2)]
         }
     );
 }

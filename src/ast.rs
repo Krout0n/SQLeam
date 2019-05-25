@@ -1,10 +1,11 @@
 use crate::primitive::Type;
+use crate::token::Token;
 
 #[derive(Debug, PartialEq)]
 pub enum AST {
     Number(i32),
     StrLiteral(String),
-    BinOP(Box<AST>, char, Box<AST>),
+    BinOP(Box<AST>, OP, Box<AST>),
     MethodCall {
         table: String,
         name: String,
@@ -14,6 +15,32 @@ pub enum AST {
         name: String,
         members: Vec<Member>,
     },
+}
+
+impl AST {
+    pub fn binop(left: Self, op: OP, right: Self) -> Self {
+        AST::BinOP(Box::new(left), op, Box::new(right))
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum OP {
+    EqEq,
+    Add,
+    Minus,
+    Mul,
+}
+
+impl OP {
+    pub fn from_token(token: Token) -> Self {
+        match token {
+            Token::EqEq => OP::EqEq,
+            Token::Add => OP::Add,
+            Token::Minus => OP::Minus,
+            Token::Mul => OP::Mul,
+            _ => unreachable!(),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
