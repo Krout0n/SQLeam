@@ -1,6 +1,7 @@
 use crate::token::Token;
 use std::collections::VecDeque;
 
+#[derive(Debug)]
 pub struct Tokenizer<'a> {
     src: &'a str,
     index: usize,
@@ -44,6 +45,7 @@ impl<'a> Tokenizer<'a> {
                 Some(Token::Number(buffer.parse().unwrap()))
             }
 
+            // StrLiteral
             Some('"') => {
                 self.read_char();
                 let mut buffer = String::new();
@@ -54,11 +56,24 @@ impl<'a> Tokenizer<'a> {
                 Some(Token::StrLiteral(buffer))
             }
 
+            // Eq or EqEq
+            Some('=') => {
+                self.read_char();
+                if let Some('=') = self.ch {
+                    Some(Token::EqEq)
+                } else {
+                    Some(Token::Symbol('='))
+                }
+            }
+
+            // Arithmetic OP
+            Some('+') => Some(Token::Add),
+            Some('-') => Some(Token::Minus),
+            Some('*') => Some(Token::Mul),
+
             // Only Symbol?
             Some(ch) => match ch {
-                '+' | '-' | '*' | '/' | '(' | ')' | '.' | ';' | ',' | '{' | '}' | ':' => {
-                    Some(Token::Symbol(ch))
-                }
+                '(' | ')' | '.' | ';' | ',' | '{' | '}' | ':' => Some(Token::Symbol(ch)),
                 _ => panic!("unexpected char! {:?}", ch),
             },
             _ => None,
@@ -89,6 +104,9 @@ impl<'a> Tokenizer<'a> {
     }
 }
 
+#[allow(unused_imports)]
+use crate::token::KeywordKind;
+
 #[test]
 fn new() {
     let t = Tokenizer::new("hello");
@@ -107,7 +125,7 @@ fn lex() {
     assert_eq!(t.lex(), Some(Token::Number(42)));
 
     let mut t = Tokenizer::new("+");
-    assert_eq!(t.lex(), Some(Token::Symbol('+')));
+    assert_eq!(t.lex(), Some(Token::Add));
 
     let mut t = Tokenizer::new("Table");
     assert_eq!(t.lex(), Some(Token::Keyword(KeywordKind::Table)));
@@ -117,6 +135,12 @@ fn lex() {
 
     let mut t = Tokenizer::new("\"How are you?\"");
     assert_eq!(t.lex(), Some(Token::StrLiteral("How are you?".to_string())));
+
+    let mut t = Tokenizer::new("=");
+    assert_eq!(t.lex(), Some(Token::Symbol('=')));
+
+    let mut t = Tokenizer::new("==");
+    assert_eq!(t.lex(), Some(Token::EqEq));
 }
 
 #[test]
@@ -124,7 +148,7 @@ fn lex_all() {
     let mut t = Tokenizer::new("42+15");
     assert_eq!(
         t.lex_all(),
-        vec![Token::Number(42), Token::Symbol('+'), Token::Number(15),]
+        vec![Token::Number(42), Token::Add, Token::Number(15),]
     );
 
     let input = "User.select();";
@@ -146,10 +170,17 @@ fn lex_all() {
         t.lex_all(),
         vec![
             Token::Number(42),
-            Token::Symbol('+'),
+            Token::Add,
             Token::Number(15),
-            Token::Symbol('+'),
+            Token::Add,
             Token::Number(3)
         ]
+    );
+
+    let input = "2 == 2";
+    let mut t = Tokenizer::new(input);
+    assert_eq!(
+        t.lex_all(),
+        vec![Token::Number(2), Token::EqEq, Token::Number(2)]
     );
 }

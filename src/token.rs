@@ -5,6 +5,10 @@ pub enum Token {
     Symbol(char),
     StrLiteral(String),
     Keyword(KeywordKind),
+    EqEq,
+    Add,
+    Minus,
+    Mul,
 }
 
 #[derive(Debug, PartialEq)]
