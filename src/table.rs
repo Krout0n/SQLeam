@@ -1,4 +1,4 @@
-use crate::ast::{Member, AST};
+use crate::ast::{Member, AST, OP};
 use crate::primitive::Type;
 
 type Identifier = String;
@@ -18,13 +18,25 @@ pub struct Table {
 enum Value {
     Int(i32),
     StrLiteral(String),
+    Bool(bool),
 }
 
 impl Value {
-    fn from_ast(tree: AST) -> Self {
+    fn eval_ast(tree: AST) -> Self {
         match tree {
             AST::Number(i) => Value::Int(i),
             AST::StrLiteral(s) => Value::StrLiteral(s),
+            AST::BinOP(left, op, right) => {
+                let left = Self::eval_ast(*left);
+                let right = Self::eval_ast(*right);
+                match (left, op, right) {
+                    (Value::Int(lhs), OP::Add, Value::Int(rhs)) => Value::Int(lhs + rhs),
+                    (Value::Int(lhs), OP::Minus, Value::Int(rhs)) => Value::Int(lhs - rhs),
+                    (Value::Int(lhs), OP::Mul, Value::Int(rhs)) => Value::Int(lhs * rhs),
+                    (Value::Int(lhs), OP::EqEq, Value::Int(rhs)) => Value::Bool(lhs == rhs),
+                    _ => unimplemented!(),
+                }
+            }
             _ => unimplemented!(),
         }
     }
@@ -48,7 +60,7 @@ impl Table {
     fn eval_args(args: Vec<AST>) -> Values {
         let mut column = vec![];
         for tree in args.into_iter() {
-            column.push(Value::from_ast(tree));
+            column.push(Value::eval_ast(tree));
         }
         column
     }
@@ -124,4 +136,38 @@ fn type_check() {
         table.type_check(&vec![Value::StrLiteral("hoge".to_string())]),
         Err("Unmatched type of arg.")
     );
+}
+
+#[test]
+fn eval_ast() {
+    let ast = AST::binop(AST::Number(1), OP::Add, AST::Number(2));
+    assert_eq!(Value::eval_ast(ast), Value::Int(3));
+
+    let ast = AST::binop(
+        AST::binop(AST::Number(1), OP::Add, AST::Number(2)),
+        OP::Add,
+        AST::Number(3),
+    );
+    assert_eq!(Value::eval_ast(ast), Value::Int(6));
+
+    let ast = AST::binop(
+        AST::binop(AST::Number(1), OP::Mul, AST::Number(2)),
+        OP::Add,
+        AST::Number(3),
+    );
+    assert_eq!(Value::eval_ast(ast), Value::Int(5));
+
+    let ast = AST::binop(
+        AST::binop(AST::Number(1), OP::Mul, AST::Number(2)),
+        OP::Minus,
+        AST::Number(3),
+    );
+    assert_eq!(Value::eval_ast(ast), Value::Int(-1));
+
+    let ast = AST::binop(
+        AST::binop(AST::Number(1), OP::Mul, AST::Number(2)),
+        OP::EqEq,
+        AST::Number(2),
+    );
+    assert_eq!(Value::eval_ast(ast), Value::Bool(true));
 }
