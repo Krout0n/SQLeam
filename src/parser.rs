@@ -2,7 +2,6 @@ use self::AST::*;
 use crate::ast::{Member, AST};
 use crate::primitive::Type;
 use crate::token::{KeywordKind, Token};
-use crate::tokenizer::Tokenizer;
 use std::collections::VecDeque;
 
 pub struct Parser {
@@ -167,8 +166,10 @@ impl Parser {
     }
 }
 
-#[test]
+#[allow(unused_imports)]
+use crate::tokenizer::Tokenizer;
 
+#[test]
 fn new() {
     let tokens = Tokenizer::new("hogefuga").lex_all();
     assert_eq!(Parser::new(tokens).index, 0);

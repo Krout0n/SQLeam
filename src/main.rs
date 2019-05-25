@@ -1,5 +1,3 @@
-use self::AST::*;
-use statikk_db::ast::AST;
 use statikk_db::database::Database;
 use statikk_db::parser::Parser;
 use statikk_db::tokenizer::Tokenizer;

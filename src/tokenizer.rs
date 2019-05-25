@@ -1,4 +1,4 @@
-use crate::token::{KeywordKind, Token};
+use crate::token::Token;
 use std::collections::VecDeque;
 
 pub struct Tokenizer<'a> {
@@ -73,6 +73,7 @@ impl<'a> Tokenizer<'a> {
         result
     }
 
+    #[allow(dead_code)]
     fn peek(&self) -> Option<char> {
         self.src.chars().nth(self.index)
     }
