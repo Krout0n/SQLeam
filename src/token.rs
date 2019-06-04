@@ -9,6 +9,7 @@ pub enum Token {
     Add,
     Minus,
     Mul,
+    Slash,
 }
 
 #[derive(Debug, PartialEq)]

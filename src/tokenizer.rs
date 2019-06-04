@@ -70,6 +70,7 @@ impl<'a> Tokenizer<'a> {
             Some('+') => Some(Token::Add),
             Some('-') => Some(Token::Minus),
             Some('*') => Some(Token::Mul),
+            Some('/') => Some(Token::Slash),
 
             // Only Symbol?
             Some(ch) => match ch {
@@ -141,6 +142,9 @@ fn lex() {
 
     let mut t = Tokenizer::new("==");
     assert_eq!(t.lex(), Some(Token::EqEq));
+
+    let mut t = Tokenizer::new("/");
+    assert_eq!(t.lex(), Some(Token::Slash));
 }
 
 #[test]
