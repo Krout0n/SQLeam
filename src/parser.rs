@@ -30,6 +30,24 @@ macro_rules! get {
     };
 }
 
+macro_rules! def_parse_binop {
+    ($name: ident, $one: ident, $another: ident, $next: ident) => {
+        fn $name(&mut self) -> AST {
+        let mut left = self.$next();
+        loop {
+            match self.peek() {
+                Some(&Token::$one) | Some(&Token::$another) => (),
+                _ => break
+            }
+            let op = self.get();
+            let right = self.$next();
+            left = AST::binop(left, OP::from_token(op), right);
+        }
+        left
+    }
+    };
+}
+
 impl Parser {
     pub fn new(tokens: VecDeque<Token>) -> Self {
         Self { index: 0, tokens }
@@ -48,35 +66,8 @@ impl Parser {
         }
     }
 
-    // TODO: def_parse_AST::binop(mul,'*', '/', term)
-    fn mul(&mut self) -> AST {
-        let mut left = self.term();
-        loop {
-            let peeked = self.peek();
-            if peeked != Some(&Token::Mul) {
-                break;
-            }
-            let op = self.get();
-            let right = self.term();
-            left = AST::binop(left, OP::from_token(op), right);
-        }
-        left
-    }
-
-    // TODO: def_parse_AST::binop(add,'*', '/', mul)
-    fn add(&mut self) -> AST {
-        let mut left = self.mul();
-        loop {
-            let peeked = self.peek();
-            if peeked != Some(&Token::Add) && peeked != Some(&Token::Minus) {
-                break;
-            }
-            let op = self.get();
-            let right = self.mul();
-            left = AST::binop(left, OP::from_token(op), right);
-        }
-        left
-    }
+    def_parse_binop!(mul, Mul, Slash, term);
+    def_parse_binop!(add, Add, Minus, mul);
 
     fn equal(&mut self) -> AST {
         let mut left = self.add();
@@ -212,6 +203,16 @@ fn mul() {
             Number(1),
             OP::Add,
             AST::binop(Number(2), OP::Mul, Number(3))
+        )
+    );
+
+    let tokens = Tokenizer::new("1 + 2 / 3").lex_all();
+    assert_eq!(
+        Parser::new(tokens).add(),
+        AST::binop(
+            Number(1),
+            OP::Add,
+            AST::binop(Number(2), OP::Div, Number(3))
         )
     );
 }

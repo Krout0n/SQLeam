@@ -29,6 +29,7 @@ pub enum OP {
     Add,
     Minus,
     Mul,
+    Div,
 }
 
 impl OP {
@@ -38,6 +39,7 @@ impl OP {
             Token::Add => OP::Add,
             Token::Minus => OP::Minus,
             Token::Mul => OP::Mul,
+            Token::Slash => OP::Div,
             _ => unreachable!(),
         }
     }
