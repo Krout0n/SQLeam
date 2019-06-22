@@ -1,5 +1,6 @@
 use crate::ast::{Member, AST, OP};
 use crate::primitive::Type;
+use serde::{Deserialize, Serialize};
 
 type Identifier = String;
 type Values = Vec<Value>;
@@ -7,14 +8,14 @@ type Values = Vec<Value>;
 // TODO: Rename better and Retype.
 type R = Result<(), &'static str>;
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Table {
     name: Identifier,
     members: Vec<Member>,
     column: Vec<Values>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 enum Value {
     Int(i32),
     StrLiteral(String),

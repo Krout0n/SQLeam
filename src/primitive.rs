@@ -1,6 +1,7 @@
 use crate::token::{KeywordKind, Token};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum Type {
     Int,
     StrLiteral,

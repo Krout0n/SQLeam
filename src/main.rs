@@ -1,7 +1,9 @@
+use bincode;
 use statikk_db::database::Database;
 use statikk_db::parser::Parser;
 use statikk_db::tokenizer::Tokenizer;
-use std::io::{self, Write};
+use std::fs;
+use std::io::{self, Read, Write};
 
 fn read() -> String {
     let mut s = String::new();
@@ -20,6 +22,18 @@ fn main() {
             "exit\n" => break,
             "show db;\n" => {
                 dbg!(&db);
+                continue;
+            }
+            "save\n" => {
+                db.save();
+                break;
+            }
+            "read\n" => {
+                let mut f = fs::File::open("db.dump").unwrap();
+                let mut buf = vec![];
+                f.read_to_end(&mut buf).unwrap();
+                let decoded: Database = bincode::deserialize(&buf[..]).unwrap();
+                db = dbg!(decoded);
                 continue;
             }
             _ => (),

@@ -1,5 +1,6 @@
 use crate::primitive::Type;
 use crate::token::Token;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq)]
 pub enum AST {
@@ -45,7 +46,7 @@ impl OP {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Member {
     pub typ: Type,
     pub field: String,

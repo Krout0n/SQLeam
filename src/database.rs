@@ -1,9 +1,14 @@
 use crate::{ast::AST, table::Table};
+use std::fs;
+
+use bincode::serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::io::{BufWriter, Write};
 
 type Identifier = String;
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Database {
     table: BTreeMap<Identifier, Table>,
 }
@@ -30,6 +35,12 @@ impl Database {
             }
             _ => Err("Unimplemented AST!!"),
         }
+    }
+
+    pub fn save(&self) {
+        let mut encoded: Vec<u8> = serialize(&self).unwrap();
+        let mut f = BufWriter::new(fs::File::create("db.dump").unwrap());
+        f.write_all(&mut encoded).unwrap();
     }
 }
 
