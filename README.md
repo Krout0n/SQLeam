@@ -8,11 +8,11 @@ $ cargo run
 ### Grammar
 ```
 <TableDef> ::= Table <TableName> '{' { <MemberName>: <Type>, } '}'
-<Stmt> ::= <TableName>'.'<Method>(Arg {, Arg});
+<Stmt> ::= <TableName> '.' <Method> '(' Arg {, Arg} ')';
 <Method> ::= insert | delete
 <Arg> ::= <Number> | <StrLiteral>
 <Number> ::= series of 01234...9
-<StrLiteral> ::= "<Chars>"
+<StrLiteral> ::= " <Chars> "
 <Chars> ::= <Char> | <Char> <Chars>
 <Char> ::= any char except "
 <TableName> ::= <Ident>
