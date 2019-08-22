@@ -17,6 +17,6 @@ $ cargo run
 <Char> ::= any char except "
 <TableName> ::= <Ident>
 <MemberName> ::= <Ident>
-<Type> ::= "int" | "string"
+<Type> ::= int | string
 <Ident> ::= series of ABCD ... XYZ | series of abc...xyz
 ```
