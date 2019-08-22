@@ -5,7 +5,7 @@
 $ cargo run
 ```
 
-### Grammer
+### Grammar
 ```
 <TableDef> ::= Table <TableName> '{' { <MemberName>: <Type>, } '}'
 <Stmt> ::= <TableName>'.'<Method>(Arg {, Arg});
